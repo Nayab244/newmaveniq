@@ -1,0 +1,101 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContDownload') 
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/Nayab244/maven.git'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'Jenkins has failed to download from the remote github', cc: '', from: '', replyTo: '', subject: 'Download failed', to: 'git.admin@gmail.com'
+                        exit(1)
+                    }
+                }
+             
+            }
+        }
+        stage('ContBuild') 
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh 'mvn package'
+                    }
+                    catch(Exception e2)
+                    {
+                        mail bcc: '', body: 'Jenkins has failed to create an artifact using maven', cc: '', from: '', replyTo: '', subject: 'Build failed', to: 'developers@gmail.com'
+                        exit(1)
+                    }
+                }
+             
+            }
+        }
+        stage('ContDeploy')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh 'scp /var/lib/jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war jenkins@172.31.38.176:/var/lib/tomcat8/webapps/testD3.war'
+                    }
+                    catch(Exception e3)
+                    {
+                        mail bcc: '', body: 'Jenkins has failed to deploy into tomcat in the QA servers', cc: '', from: '', replyTo: '', subject: 'Deployment failed', to: 'middleware_team@gmail.com'
+                        exit(1)
+                    }
+                }
+                
+            }
+        }
+        stage('ContTest')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/Nayab244/FunctionalTesting.git'
+                        sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipeline/testing.jar'
+                    }
+                    catch(Exception e4)
+                    {
+                        mail bcc: '', body: 'Automation testing on the application has failed', cc: '', from: '', replyTo: '', subject: 'Functional testing failed', to: 'testers_team@gmail.com'
+                        exit(1)
+                    }
+                }
+                
+            }
+        }
+        stage('ContDelivery')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh 'scp /var/lib/jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war jenkins@172.31.35.101:/var/lib/tomcat8/webapps/prodD3.war'
+                    }
+                    catch(Exception e5)
+                    {
+                        mail bcc: '', body: 'Jenkins is unable to deploy into the prod servers', cc: '', from: '', replyTo: '', subject: 'Delivery failed', to: 'delivery_team@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
