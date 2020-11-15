@@ -1,0 +1,43 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContDownload') 
+        {
+            steps
+            {
+             git 'https://github.com/Nayab244/maven.git'
+            }
+        }
+        stage('ContBuild') 
+        {
+            steps
+            {
+             sh 'mvn package'
+            }
+        }
+        stage('ContDeploy')
+        {
+            steps
+            {
+                sh 'scp /var/lib/jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war jenkins@172.31.38.176:/var/lib/tomcat8/webapps/testD1.war'
+            }
+        }
+        stage('ContTest')
+        {
+            steps
+            {
+                git 'https://github.com/Nayab244/FunctionalTesting.git'
+                sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipeline/testing.jar'
+            }
+        }
+        stage('ContDelivery')
+        {
+            steps
+            {
+                sh 'scp /var/lib/jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war jenkins@172.31.35.101:/var/lib/tomcat8/webapps/prodD1.war'
+            }
+        }
+    }    
+}
